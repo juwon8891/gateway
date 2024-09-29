@@ -1,0 +1,22 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyPatchPolicy
+metadata:
+  name: update-admin-api
+  namespace: envoy-gateway-system
+spec:
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: gateway-conformance-infra/same-namespace  # namespace를 이름에 포함
+  type: JSONPatch
+  jsonPatches:
+    - type: "type.googleapis.com/envoy.config.listener.v3.Listener"
+      name: gateway-conformance-infra/same-namespace/http
+      operation:
+        op: replace
+        path: "/admin"
+        value:
+          address:
+            socket_address:
+              address: 0.0.0.0
+              port_value: 9901
