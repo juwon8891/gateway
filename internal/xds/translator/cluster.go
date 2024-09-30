@@ -8,6 +8,7 @@ package translator
 import (
 	"encoding/hex"
 	"fmt"
+	"net"
 	"sort"
 	"time"
 
@@ -83,7 +84,7 @@ func buildEndpointType(settings []*ir.DestinationSetting) EndpointType {
 func buildXdsCluster(args *xdsClusterArgs) *clusterv3.Cluster {
 	cluster := &clusterv3.Cluster{
 		Name:            args.name,
-		DnsLookupFamily: clusterv3.Cluster_V4_ONLY,
+		DnsLookupFamily: getDnsLookupFamily(args.settings),
 		CommonLbConfig: &clusterv3.Cluster_CommonLbConfig{
 			LocalityConfigSpecifier: &clusterv3.Cluster_CommonLbConfig_LocalityWeightedLbConfig_{
 				LocalityWeightedLbConfig: &clusterv3.Cluster_CommonLbConfig_LocalityWeightedLbConfig{},
@@ -774,4 +775,44 @@ func buildHTTP2Settings(opts *ir.HTTP2Settings) *corev3.Http2ProtocolOptions {
 	}
 
 	return out
+}
+
+func getDnsLookupFamily(settings []*ir.DestinationSetting) clusterv3.Cluster_DnsLookupFamily {
+	if len(settings) == 0 {
+		return clusterv3.Cluster_AUTO
+	}
+
+	hasIPv4 := false
+	hasIPv6 := false
+	hasFQDN := false
+
+	for _, setting := range settings {
+		for _, endpoint := range setting.Endpoints {
+			if isIPv4(endpoint.Host) {
+				hasIPv4 = true
+			} else if isIPv6(endpoint.Host) {
+				hasIPv6 = true
+			} else {
+				hasFQDN = true
+			}
+			if (hasIPv4 && hasIPv6) || hasFQDN {
+				return clusterv3.Cluster_ALL
+			}
+		}
+	}
+
+	if hasIPv6 {
+		return clusterv3.Cluster_V6_ONLY
+	} else if hasIPv4 {
+		return clusterv3.Cluster_V4_ONLY
+	}
+	return clusterv3.Cluster_AUTO
+}
+
+func isIPv4(host string) bool {
+	return net.ParseIP(host) != nil && net.ParseIP(host).To4() != nil
+}
+
+func isIPv6(host string) bool {
+	return net.ParseIP(host) != nil && net.ParseIP(host).To4() == nil
 }

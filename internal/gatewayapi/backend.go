@@ -59,9 +59,6 @@ func validateBackend(backend *egv1a1.Backend) error {
 			if err != nil {
 				return fmt.Errorf("IP address %s is invalid", ep.IP.Address)
 			} else {
-				if !ip.Is4() {
-					return fmt.Errorf("IP address %s is not IPv4", ep.IP.Address)
-				}
 				if ip.IsLoopback() {
 					return fmt.Errorf("IP address %s in the loopback range is not supported", ep.IP.Address)
 				}
