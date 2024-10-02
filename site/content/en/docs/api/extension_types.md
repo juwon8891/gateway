@@ -305,7 +305,7 @@ _Appears in:_
 | Field | Type | Required | Description |
 | ---   | ---  | ---      | ---         |
 | `fqdn` | _[FQDNEndpoint](#fqdnendpoint)_ |  false  | FQDN defines a FQDN endpoint |
-| `ip` | _[IPEndpoint](#ipendpoint)_ |  false  | IP defines an IP endpoint. Currently, only IPv4 Addresses are supported. |
+| `ip` | _[IPEndpoint](#ipendpoint)_ |  false  | IP defines an IP endpoint. Both IPv4 and IPv6 addresses are supported. |
 | `unix` | _[UnixSocket](#unixsocket)_ |  false  | Unix defines the unix domain socket endpoint |
 
 
@@ -1548,7 +1548,7 @@ _Appears in:_
 | Field | Type | Required | Description |
 | ---   | ---  | ---      | ---         |
 | `fqdn` | _[FQDNEndpoint](#fqdnendpoint)_ |  false  | FQDN defines a FQDN endpoint |
-| `ip` | _[IPEndpoint](#ipendpoint)_ |  false  | IP defines an IP endpoint. Currently, only IPv4 Addresses are supported. |
+| `ip` | _[IPEndpoint](#ipendpoint)_ |  false  | IP defines an IP endpoint. Both IPv4 and IPv6 addresses are supported. |
 | `unix` | _[UnixSocket](#unixsocket)_ |  false  | Unix defines the unix domain socket endpoint |
 | `host` | _string_ |  false  | Host define the extension service hostname.<br />Deprecated: use the appropriate transport attribute instead (FQDN,IP,Unix) |
 | `port` | _integer_ |  false  | Port defines the port the extension service is exposed on.<br />Deprecated: use the appropriate transport attribute instead (FQDN,IP,Unix) |

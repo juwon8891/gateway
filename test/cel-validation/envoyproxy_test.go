@@ -218,7 +218,7 @@ func TestEnvoyProxyProvider(t *testing.T) {
 					},
 				}
 			},
-			wantErrors: []string{"loadBalancerIP must be a valid IPv4 address"},
+			wantErrors: []string{"loadBalancerIP must be a valid IP address"},
 		},
 		{
 			desc: "ServiceTypeLoadBalancer-with-invalid-IP",
@@ -235,7 +235,7 @@ func TestEnvoyProxyProvider(t *testing.T) {
 					},
 				}
 			},
-			wantErrors: []string{"loadBalancerIP must be a valid IPv4 address"},
+			wantErrors: []string{"loadBalancerIP must be a valid IP address"},
 		},
 		{
 			desc: "ServiceTypeClusterIP-with-empty-IP",
