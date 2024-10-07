@@ -149,11 +149,11 @@ func originalIPDetectionExtensions(clientIPDetection *ir.ClientIPDetectionSettin
 
 // buildXdsTCPListener creates a xds Listener resource
 // TODO: Improve function parameters
-func buildXdsTCPListener(name, address string, port uint32, keepalive *ir.TCPKeepalive, connection *ir.ClientConnection, accesslog *ir.AccessLog) *listenerv3.Listener {
+func buildXdsTCPListener(name, address string, port uint32, ipFamily ir.IPFamily, keepalive *ir.TCPKeepalive, connection *ir.ClientConnection, accesslog *ir.AccessLog) *listenerv3.Listener {
 	socketOptions := buildTCPSocketOptions(keepalive)
 	al := buildXdsAccessLog(accesslog, true)
 	bufferLimitBytes := buildPerConnectionBufferLimitBytes(connection)
-	return &listenerv3.Listener{
+	listener := &listenerv3.Listener{
 		Name:                          name,
 		AccessLog:                     al,
 		SocketOptions:                 socketOptions,
@@ -170,6 +170,28 @@ func buildXdsTCPListener(name, address string, port uint32, keepalive *ir.TCPKee
 			},
 		},
 	}
+
+	if ipFamily == ir.Dual {
+		socketAddress := listener.Address.GetSocketAddress()
+		socketAddress.Ipv4Compat = true
+		listener.AdditionalAddresses = []*listenerv3.AdditionalAddress{
+			{
+				Address: &corev3.Address{
+					Address: &corev3.Address_SocketAddress{
+						SocketAddress: &corev3.SocketAddress{
+							Protocol: corev3.SocketAddress_TCP,
+							Address:  "::",
+							PortSpecifier: &corev3.SocketAddress_PortValue{
+								PortValue: port,
+							},
+						},
+					},
+				},
+			},
+		}
+	}
+
+	return listener
 }
 
 func buildPerConnectionBufferLimitBytes(connection *ir.ClientConnection) *wrapperspb.UInt32Value {
@@ -180,7 +202,7 @@ func buildPerConnectionBufferLimitBytes(connection *ir.ClientConnection) *wrappe
 }
 
 // buildXdsQuicListener creates a xds Listener resource for quic
-func buildXdsQuicListener(name, address string, port uint32, accesslog *ir.AccessLog) *listenerv3.Listener {
+func buildXdsQuicListener(name, address string, port uint32, ipFamily ir.IPFamily, accesslog *ir.AccessLog) *listenerv3.Listener {
 	xdsListener := &listenerv3.Listener{
 		Name:      name + "-quic",
 		AccessLog: buildXdsAccessLog(accesslog, true),
@@ -202,6 +224,26 @@ func buildXdsQuicListener(name, address string, port uint32, accesslog *ir.Acces
 		// Remove /healthcheck/fail from endpoints that trigger a drain of listeners for better control
 		// over the drain process while still allowing the healthcheck to be failed during pod shutdown.
 		DrainType: listenerv3.Listener_MODIFY_ONLY,
+	}
+
+	if ipFamily == ir.Dual {
+		socketAddress := xdsListener.Address.GetSocketAddress()
+		socketAddress.Ipv4Compat = true
+		xdsListener.AdditionalAddresses = []*listenerv3.AdditionalAddress{
+			{
+				Address: &corev3.Address{
+					Address: &corev3.Address_SocketAddress{
+						SocketAddress: &corev3.SocketAddress{
+							Protocol: corev3.SocketAddress_UDP,
+							Address:  "::",
+							PortSpecifier: &corev3.SocketAddress_PortValue{
+								PortValue: port,
+							},
+						},
+					},
+				},
+			},
+		}
 	}
 
 	return xdsListener

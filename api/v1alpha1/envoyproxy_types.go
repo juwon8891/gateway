@@ -134,6 +134,13 @@ type EnvoyProxySpec struct {
 	// These settings are applied on backends for which TLS policies are specified.
 	// +optional
 	BackendTLS *BackendTLSConfig `json:"backendTLS,omitempty"`
+
+	// IPFamily specifies the IP family for the EnvoyProxy.
+	// It can be ipv4, ipv6, or dual.
+	// +kubebuilder:default=ipv4
+	// +kubebuilder:validation:Enum=ipv4;ipv6;dual
+	// +optional
+	IPFamily *IPFamily `json:"ipFamily,omitempty"`
 }
 
 // RoutingType defines the type of routing of this Envoy proxy.
@@ -409,6 +416,18 @@ type EnvoyProxyList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []EnvoyProxy `json:"items"`
 }
+
+// IPFamily defines the IP family to use for the Envoy proxy.
+type IPFamily string
+
+const (
+	// IPv4 defines the IPv4 family.
+	IPv4 IPFamily = "IPv4"
+	// IPv6 defines the IPv6 family.
+	IPv6 IPFamily = "IPv6"
+	// DualStack defines the dual-stack family.
+	DualStack IPFamily = "DualStack"
+)
 
 func init() {
 	SchemeBuilder.Register(&EnvoyProxy{}, &EnvoyProxyList{})
