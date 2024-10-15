@@ -4,12 +4,7 @@ metadata:
   name: dualstack-gateway
   namespace: gateway-conformance-infra
 spec:
-  gatewayClassName: envoy-gateway
-  infrastructure:
-    parametersRef:
-      group: gateway.envoyproxy.io
-      kind: EnvoyProxy
-      name: dualstack-proxy-config
+  gatewayClassName: dualstack-gateway
   listeners:
     - name: http
       port: 80
@@ -17,6 +12,18 @@ spec:
       allowedRoutes:
         namespaces:
           from: Same
+---
+kind: GatewayClass
+apiVersion: gateway.networking.k8s.io/v1
+metadata:
+  name: dualstack-gateway
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: dualstack-proxy-config
+    namespace: gateway-conformance-infra
 ---
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
@@ -49,13 +56,12 @@ metadata:
   name: dualstack-service
   namespace: gateway-conformance-infra
 spec:
-  ipFamilyPolicy: RequireDualStack
+  # ipFamilyPolicy: RequireDualStack
   ipFamilies:
-    - IPv4
     - IPv6
   ports:
     - port: 8080
-      targetPort: 8080
+      targetPort: 80
   selector:
     app: dualstack-app
 ---
@@ -77,5 +83,3 @@ spec:
       containers:
         - name: dualstack-app
           image: nginx:latest
-          ports:
-            - containerPort: 8080
