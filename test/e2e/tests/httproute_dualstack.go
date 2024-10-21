@@ -91,7 +91,7 @@ func validateResponse(t *testing.T, suite *suite.ConformanceTestSuite, ns, gwAdd
 
 	// IPv6 주소에 맞게 URL 형식 지정
 	if protocol == "IPv6" {
-		newURL, parseErr := uㄱrl.Parse(fmt.Sprintf("http://[%s]%s", gwAddr, gwURL.Path))
+		newURL, parseErr := url.Parse(fmt.Sprintf("http://[%s]%s", gwAddr, gwURL.Path))
 		if parseErr != nil {
 			t.Fatalf("Failed to parse gateway address as IPv6: %v", parseErr)
 		}
