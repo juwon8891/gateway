@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 
 	egv1a1 "github.com/envoyproxy/gateway/api/v1alpha1"
-	"github.com/envoyproxy/gateway/internal/utils/net"
+	netutils "github.com/envoyproxy/gateway/internal/utils/net"
 	"github.com/envoyproxy/gateway/internal/utils/regex"
 )
 
@@ -26,7 +26,8 @@ const (
 	// It defaults to the Envoy Gateway Kubernetes service.
 	envoyGatewayXdsServerHost = "envoy-gateway"
 	// EnvoyAdminAddress is the listening address of the envoy admin interface.
-	EnvoyAdminAddress = "127.0.0.1"
+	envoyAdminAddress     = "127.0.0.1"
+	envoyAdminAddressIPv6 = "::1"
 	// EnvoyAdminPort is the port used to expose admin interface.
 	EnvoyAdminPort = 19000
 	// envoyAdminAccessLogPath is the path used to expose admin access log.
@@ -39,13 +40,28 @@ const (
 	// DefaultWasmServerPort is the default listening port of the wasm HTTP server.
 	wasmServerPort = 18002
 
-	envoyReadinessAddress = "0.0.0.0"
-	EnvoyReadinessPort    = 19001
-	EnvoyReadinessPath    = "/ready"
+	envoyReadinessAddress     = "0.0.0.0"
+	envoyReadinessAddressIPv6 = "::"
+	EnvoyReadinessPort        = 19001
+	EnvoyReadinessPath        = "/ready"
 
 	defaultSdsTrustedCAPath   = "/sds/xds-trusted-ca.json"
 	defaultSdsCertificatePath = "/sds/xds-certificate.json"
 )
+
+func AdminAddress() string {
+	if netutils.IsIPv6Pod() {
+		return envoyAdminAddressIPv6
+	}
+	return envoyAdminAddress
+}
+
+func readinessAddress() string {
+	if netutils.IsIPv6Pod() {
+		return envoyReadinessAddressIPv6
+	}
+	return envoyReadinessAddress
+}
 
 //go:embed bootstrap.yaml.tpl
 var bootstrapTmplStr string
@@ -199,7 +215,7 @@ func GetRenderedBootstrapConfig(opts *RenderBootstrapConfigOptions) (string, err
 				host, port = *sink.OpenTelemetry.Host, uint32(sink.OpenTelemetry.Port)
 			}
 			if len(sink.OpenTelemetry.BackendRefs) > 0 {
-				host, port = net.BackendHostAndPort(sink.OpenTelemetry.BackendRefs[0].BackendObjectReference, "")
+				host, port = netutils.BackendHostAndPort(sink.OpenTelemetry.BackendRefs[0].BackendObjectReference, "")
 			}
 			addr := fmt.Sprintf("%s:%d", host, port)
 			if addresses.Has(addr) {
@@ -249,12 +265,12 @@ func GetRenderedBootstrapConfig(opts *RenderBootstrapConfigOptions) (string, err
 				Port:    wasmServerPort,
 			},
 			AdminServer: adminServerParameters{
-				Address:       EnvoyAdminAddress,
+				Address:       AdminAddress(),
 				Port:          EnvoyAdminPort,
 				AccessLogPath: envoyAdminAccessLogPath,
 			},
 			ReadyServer: readyServerParameters{
-				Address:       envoyReadinessAddress,
+				Address:       readinessAddress(),
 				Port:          EnvoyReadinessPort,
 				ReadinessPath: EnvoyReadinessPath,
 			},
