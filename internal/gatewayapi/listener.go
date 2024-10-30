@@ -27,7 +27,7 @@ import (
 
 const (
 	ipv4ListenerAddress = "0.0.0.0"
-	ipv6ListenerAddress = "::1"
+	ipv6ListenerAddress = "::"
 )
 
 var _ ListenersTranslator = (*Translator)(nil)
