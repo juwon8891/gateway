@@ -25,6 +25,11 @@ import (
 	"github.com/envoyproxy/gateway/internal/utils/net"
 )
 
+const (
+	ipv4ListenerAddress = "0.0.0.0"
+	ipv6ListenerAddress = "::1"
+)
+
 var _ ListenersTranslator = (*Translator)(nil)
 
 type ListenersTranslator interface {

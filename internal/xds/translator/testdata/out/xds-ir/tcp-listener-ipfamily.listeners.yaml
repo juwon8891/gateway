@@ -1,7 +1,7 @@
 - additionalAddresses:
   - address:
       socketAddress:
-        address: '::'
+        address: ::1
         portValue: 8082
   address:
     socketAddress:
