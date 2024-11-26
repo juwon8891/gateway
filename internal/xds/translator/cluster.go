@@ -11,6 +11,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/envoyproxy/gateway/internal/ir"
+	"github.com/envoyproxy/gateway/internal/utils/protocov"
 	clusterv3 "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpointv3 "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
@@ -27,10 +29,6 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 	"k8s.io/utils/ptr"
-
-	egv1a1 "github.com/envoyproxy/gateway/api/v1alpha1"
-	"github.com/envoyproxy/gateway/internal/ir"
-	"github.com/envoyproxy/gateway/internal/utils/protocov"
 )
 
 const (
@@ -57,7 +55,7 @@ type xdsClusterArgs struct {
 	backendConnection *ir.BackendConnection
 	dns               *ir.DNS
 	useClientProtocol bool
-	ipFamily          *egv1a1.IPFamily
+	ipFamily          *ir.IPFamily
 }
 
 type EndpointType int
@@ -87,11 +85,11 @@ func buildXdsCluster(args *xdsClusterArgs) *clusterv3.Cluster {
 	dnsLookupFamily := clusterv3.Cluster_V4_PREFERRED
 	if args.ipFamily != nil {
 		switch *args.ipFamily {
-		case egv1a1.IPv4:
+		case ir.IPv4:
 			dnsLookupFamily = clusterv3.Cluster_V4_ONLY
-		case egv1a1.IPv6:
+		case ir.IPv6:
 			dnsLookupFamily = clusterv3.Cluster_V6_ONLY
-		case egv1a1.DualStack:
+		case ir.Dualstack:
 			dnsLookupFamily = clusterv3.Cluster_ALL
 		}
 	}
@@ -698,6 +696,7 @@ type ExtraArgs struct {
 	metrics       *ir.Metrics
 	http1Settings *ir.HTTP1Settings
 	http2Settings *ir.HTTP2Settings
+	ipFamily      *ir.IPFamily
 }
 
 type clusterArgs interface {
@@ -716,6 +715,7 @@ func (route *UDPRouteTranslator) asClusterArgs(extra *ExtraArgs) *xdsClusterArgs
 		endpointType: buildEndpointType(route.Destination.Settings),
 		metrics:      extra.metrics,
 		dns:          route.DNS,
+		ipFamily:     extra.ipFamily,
 	}
 }
 
@@ -737,6 +737,7 @@ func (route *TCPRouteTranslator) asClusterArgs(extra *ExtraArgs) *xdsClusterArgs
 		metrics:           extra.metrics,
 		backendConnection: route.BackendConnection,
 		dns:               route.DNS,
+		ipFamily:          extra.ipFamily,
 	}
 }
 
@@ -754,6 +755,7 @@ func (httpRoute *HTTPRouteTranslator) asClusterArgs(extra *ExtraArgs) *xdsCluste
 		http1Settings:     extra.http1Settings,
 		http2Settings:     extra.http2Settings,
 		useClientProtocol: ptr.Deref(httpRoute.UseClientProtocol, false),
+		ipFamily:          extra.ipFamily,
 	}
 
 	// Populate traffic features.

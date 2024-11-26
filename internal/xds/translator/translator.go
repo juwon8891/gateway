@@ -463,6 +463,7 @@ func (t *Translator) addRouteToRouteConfig(
 			ea := &ExtraArgs{
 				metrics:       metrics,
 				http1Settings: httpListener.HTTP1,
+				ipFamily:      httpListener.IPFamily,
 			}
 
 			if httpRoute.Traffic != nil && httpRoute.Traffic.HTTP2 != nil {
@@ -597,7 +598,10 @@ func (t *Translator) processTCPListenerXdsTranslation(
 		patchProxyProtocolFilter(xdsListener, tcpListener.EnableProxyProtocol)
 
 		for _, route := range tcpListener.Routes {
-			if err := processXdsCluster(tCtx, &TCPRouteTranslator{route}, &ExtraArgs{metrics: metrics}); err != nil {
+			if err := processXdsCluster(tCtx, &TCPRouteTranslator{route}, &ExtraArgs{
+				metrics:  metrics,
+				ipFamily: tcpListener.IPFamily,
+			}); err != nil {
 				errs = errors.Join(errs, err)
 			}
 			if route.TLS != nil && route.TLS.Terminate != nil {
@@ -684,7 +688,10 @@ func processUDPListenerXdsTranslation(
 			}
 
 			// 1:1 between IR UDPRoute and xDS Cluster
-			if err := processXdsCluster(tCtx, &UDPRouteTranslator{route}, &ExtraArgs{metrics: metrics}); err != nil {
+			if err := processXdsCluster(tCtx, &UDPRouteTranslator{route}, &ExtraArgs{
+				metrics:  metrics,
+				ipFamily: udpListener.IPFamily,
+			}); err != nil {
 				errs = errors.Join(errs, err)
 			}
 		}
